@@ -1,6 +1,6 @@
 {
   "name": "pathfinding-visualizer",
-  "homepage": "shaynewinn.github.io/pathfinding-visualizer",
+  "homepage": "https://shaynewinn.github.io/pathfinding-visualizer",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
