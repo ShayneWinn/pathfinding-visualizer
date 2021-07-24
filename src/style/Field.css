@@ -1,0 +1,36 @@
+
+.cell{
+    stroke: #000;
+    stroke-opacity: 0.2;
+}
+
+.air{
+    fill: white;
+}
+
+.wall{
+    /* fill: rgb(9, 40, 53); */
+    fill: darkslategray;
+    position: relative;
+    /*
+    animation-name: wall-pop;
+    animation-duration: 0.1s;
+    animation-timing-function: ease-out;
+    animation-direction: alternate;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
+    */
+}
+
+@keyframes wall-pop{
+    from {
+        transform: scale(0.25);
+    }
+    50% {
+        transform: scale(0.6);
+    }
+    to {
+        transform: scale(1);
+    }
+}

@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+import '../style/Field.css';
 
 class Field extends Component {
     constructor(props){
@@ -81,17 +82,25 @@ class Field extends Component {
     renderCells(){
         var cells = []
         for(let i = 0; i < this.state.cells.length; i++){
+            let classes = 'cell'
+            switch(this.state.cells[i].state){
+                case 0:
+                    classes += ' air';
+                    break;
+                case 1:
+                    classes += ' wall';
+                    break;
+                default:
+                    break;
+            }
+
             cells.push(
                 <rect 
                     x={this.state.cells[i].x*this.cellSize}
                     y={this.state.cells[i].y*this.cellSize}
                     width="30" height="30" 
                     r="0" rx="0" ry="0" 
-                    style={{
-                        fill:(this.state.cells[i].state === 0 ? "white" : "gray"), 
-                        stroke:"#000", 
-                        strokeOpacity:"0.2",
-                    }}
+                    class={classes}
                 />
             )
         }
@@ -107,6 +116,7 @@ class Field extends Component {
                     height={this.state.height} 
                     width={this.state.width} 
                     style={{overflow:'hidden', position:"relative"}}
+                    xmlns="http://www.w3.org/2000/svg"
                     onMouseMove={(event) => this.handleMouseMove(event)}
                     onMouseDown={(event) => this.handleMouseDown(event)}
                     onMouseUp={(event) => this.handleMouseUp(event)}
