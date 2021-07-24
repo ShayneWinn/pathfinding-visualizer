@@ -21,13 +21,20 @@ class Panel extends Component {
         })
     }
 
+    componentDidUpdate(){
+        console.log("Update");
+    }
+
     render() {
         return(
             <div className="panel" style={{left: this.state.x, top: this.state.y}}>
             <div className="panel__container">
-              <PanelHeader onDrag={(moveX, moveY) => this.handleDrag(moveX, moveY)} />
-      
+              <PanelHeader 
+                onDrag={(moveX, moveY) => this.handleDrag(moveX, moveY)} 
+                header={this.props.header}
+              />
               <div className="panel__content">
+                  {this.props.children}
               </div>
             </div>
           </div>

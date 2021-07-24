@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const PanelHeader = ({ onDrag }) => {
+const PanelHeader = ({ onDrag, header }) => {
   const [mouseDown, setMouseDown] = useState(false);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const PanelHeader = ({ onDrag }) => {
 
   return (
     <div className="panel__header" onMouseDown={handleMouseDown}>
-      header
+      {header}
     </div>
   );
 }
