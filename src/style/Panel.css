@@ -1,0 +1,15 @@
+.panel {
+    position: fixed;
+    padding: 1%;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+  
+  .panel-header {
+    padding: 4px;
+  }
+  
+  .panel-content {
+    padding: 4px;
+  }
