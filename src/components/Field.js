@@ -1,12 +1,16 @@
 import React, {Component} from "react";
-import '../style/Field.css';
+import '../style/Field.css'; // style sheet for the Field and Cells
 
+/**
+ * Field is the Component that handles drawing the cells and path
+ */
 class Field extends Component {
+    /// Constructor
     constructor(props){
         super(props);
 
         this.cellSize = 30;
-        this.srawing = false;
+        this.drawing = false;
 
         this.state = {
             height: 0,
@@ -17,6 +21,7 @@ class Field extends Component {
         }
     }
 
+    /// Called after the component is inserted into the tree
     componentDidMount() {
         const cellSize = this.cellSize;
         const height = this.divElement.clientHeight;
@@ -44,24 +49,27 @@ class Field extends Component {
         })
     }
 
+    /// Called by the <svg /> component when the mouse is pressed
     handleMouseDown(event){
         const coords = this.toGridCoords(event.pageX, event.pageY);
-        console.log("mouseDown (" + coords[0] + ", " + coords[1] + ")");
+        //console.log("mouseDown (" + coords[0] + ", " + coords[1] + ")-feild");
         this.drawing=true;
     }
 
+    /// Called by the <svg /> component when the mouse is released
     handleMouseUp(event){
         const coords = this.toGridCoords(event.pageX, event.pageY);
-        console.log("MouseUp");
+        //console.log("MouseUp-feild");
         this.drawing=false;
     }
 
+    /// Called by the <svg /> component when the mouse is moved
     handleMouseMove(event){
         if(!this.drawing){
             return;
         }
         const coord = this.toGridCoords(event.pageX, event.pageY);
-        //console.lg("MouseMove (" + coords[0] + ", " + coords[1] + ")");
+        //console.log("MouseMove (" + coord[0] + ", " + coord[1] + ")-feild");
         const cells = this.state.cells.slice();
 
         cells[(coord[1] * this.state.nCellsWide) + coord[0]].state = 1;
@@ -75,20 +83,29 @@ class Field extends Component {
         })
     }
 
+    /// Converts screen coords to grid coords, 
+    ///     only works if element is in upper left corner
     toGridCoords(x, y){
-        return [Math.floor(x/this.cellSize), Math.floor(y/this.cellSize)];
+        const rect = this.divElement.getBoundingClientRect();
+        //console.log(rect);
+        return([
+            Math.floor((x - rect.x)/this.cellSize), 
+            Math.floor((y + rect.y)/this.cellSize)
+        ]);
+        
     }
 
+    /// Called to render all cells
     renderCells(){
         var cells = []
         for(let i = 0; i < this.state.cells.length; i++){
             let classes = 'cell'
             switch(this.state.cells[i].state){
                 case 0:
-                    classes += ' air';
+                    classes += ' cell-air';
                     break;
                 case 1:
-                    classes += ' wall';
+                    classes += ' cell-wall';
                     break;
                 default:
                     break;
@@ -96,10 +113,10 @@ class Field extends Component {
 
             cells.push(
                 <rect 
-                    x={this.state.cells[i].x*this.cellSize}
-                    y={this.state.cells[i].y*this.cellSize}
-                    width="30" height="30" 
-                    r="0" rx="0" ry="0" 
+                    x={this.state.cells[i].x*this.cellSize + (0 * this.cellSize)}
+                    y={this.state.cells[i].y*this.cellSize + (0 * this.cellSize)}
+                    r={this.cellSize * 0.25 * 0}
+                    width={this.cellSize} height={this.cellSize}
                     class={classes}
                 />
             )
@@ -107,6 +124,7 @@ class Field extends Component {
         return cells;
     }
     
+    /// Called to render the component
     render(){
         return (
             <div 
@@ -115,7 +133,7 @@ class Field extends Component {
                 <svg 
                     height={this.state.height} 
                     width={this.state.width} 
-                    style={{overflow:'hidden', position:"relative"}}
+                    style={{overflow:'hidden', top:'0px', left:'0px', position:'absolute'}}
                     xmlns="http://www.w3.org/2000/svg"
                     onMouseMove={(event) => this.handleMouseMove(event)}
                     onMouseDown={(event) => this.handleMouseDown(event)}

@@ -4,11 +4,11 @@
     stroke-opacity: 0.2;
 }
 
-.air{
+.cell-air{
     fill: white;
 }
 
-.wall{
+.cell-wall{
     /* fill: rgb(9, 40, 53); */
     fill: darkslategray;
     position: relative;
