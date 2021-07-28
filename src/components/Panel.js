@@ -26,14 +26,12 @@ class Panel extends Component {
     handleMouseDrag = (e) => this.onDrag(e.movementX, e.movementY);
 
     handleMouseDown = () => {
-        console.log("MouseDown-panel");
         this.mouseDown = true;
         window.addEventListener('mouseup', this.handleMouseUp);
         window.addEventListener('mousemove', this.handleMouseDrag);
     };
 
     handleMouseUp = () => {
-        console.log("MouseUp-panel");
         this.mouseDown = false;
         window.removeEventListener('mouseup', this.handleMouseUp);
         window.removeEventListener('mousemove', this.handleMouseDrag);
