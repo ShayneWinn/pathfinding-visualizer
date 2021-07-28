@@ -5,24 +5,28 @@
 }
 
 .hex-air{
-    fill: rgba(0, 0, 0, 0);
+    fill: white;
 }
 
 .hex-wall{
     /* fill: rgb(9, 40, 53); */
-    fill: darkslategray;
-    position: relative;
-    /*
+    fill: #596275;
     animation-name: wall-pop;
-    animation-duration: 0.1s;
-    animation-timing-function: ease-out;
-    animation-direction: alternate;
-    animation-iteration-count: 1;
+    animation-duration: 0.05s;
+    animation-direction: normal;
     animation-fill-mode: forwards;
     animation-play-state: running;
-    */
 }
 
 .hex-visited{
     fill:#98FB98;
+}
+
+@keyframes wall-pop{
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
 }
