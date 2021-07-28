@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import Field from './components/Field'
+import Queue from './Queue'
 import Panel from './components/Panel'
 import HexField from './components/HexField'
 import * as Hex from './hex/Hex'
@@ -16,9 +16,13 @@ class App extends Component {
       mapWidth: 0,
       mapHeight: 0,
       hexSize: 20,
-      button1Text: "State 1",
-      button2Text: "State 2",
-      button3Text: "State 3",
+      searchResults: new Queue(),
+      button1Text: null,
+      button2Text: null,
+      button3Text: null,
+      button1Enabled: false,
+      button2Enabled: false,
+      button3Enabled: false,
       button1Callback: null,
       button2Callback: null,
       button3Callback: null
@@ -27,45 +31,44 @@ class App extends Component {
     this.stateMachine = new StateMachine({
       init: 'none',
       transitions: [
-        {name: 'start',     from: 'none',   to: 'ready'},
-        {name: 'drawWall',    from: 'ready',  to: 'drawingWalls'},
-        {name: 'eraseWall',   from: 'ready',  to: 'erasingWalls'},
-        {name: 'finishDraw',  from:['drawingWalls', 'erasingWalls'], to: 'ready'}
-      ],
-      methods: [
+        // start
+        {name: 'start',       from: 'none',   to: 'ready'},
 
-      ]
-    })
+        // drawing
+        {name: 'drawWall',    from: 'ready',  to: 'drawingWalls'},                  // drawing new walls
+        {name: 'eraseWall',   from: 'ready',  to: 'erasingWalls'},                  // erasing walls
+        {name: 'finishDraw',  from:['drawingWalls', 'erasingWalls'], to: 'ready'},  // done drawing, ready to visualize
 
-    this.oldStateMachine = new StateMachine({
-      init: 'none',
-      transitions: [
-        { name: 'start',       from: 'none', to:'state1'},
-        { name: 'state1tran', from: ['state2', 'state3', 'state4'],    to:'state1'},
-        { name: 'state2tran', from: ['state1', 'state3', 'state4'],    to:'state2'},
-        { name: 'state3tran', from: ['state1', 'state2', 'state4'],    to:'state3'},
-        { name: 'state4tran', from: ['state1', 'state2', 'state3'],    to:'state4'}
+        // pathfinding
+        {name: 'start',       from: 'ready',                                to: 'visualizing'},     // the algorithm is running
+        {name: 'pause',       from: 'visualizing',                          to: 'paused'},          // the visualization is paused
+        {name: 'cancel',      from: ['paused', 'finished'],                 to: 'ready'},           // cancel the search
+        {name: 'resume',      from: 'paused',                               to: 'visualizing'},     // the visualization is resumed
+        {name: 'finish',      from: 'visualizing',                          to: 'finished'},        // the program has vinished visualizing
+        {name: 'restart',     from: ['finished', 'paused', 'visualizing'],  to: 'visualizing'},     // the program is restarting the visualization
+        {name: 'clear',       from: ['ready', 'visualizing', 'paused', 'finished'],   to: 'ready'}
+
       ],
       methods: {
-        onState1: () => this.onState1(),
-        onState2: () => this.onState2(),
-        onState3: () => this.onState3(),
-        onState4: () => this.onState4()
+        onAfterTransition: () => this.forceUpdate(),
+        onReady: () => this.onReady(),
+        onVisualizing: () => this.onVisualizing(),
+        onPaused: () => this.onPaused(),
+        onFinished: () => this.onFinished(),
+
+        onStart: () => this.onStart(),
+        onRestart: () => this.onRestart(),
+        onClear: () => this.onClear(),
+        onCancel: () => this.onCancel()
       }
     })
-    /*
-    this.state.hexMap.set([0, 0, 0 ].toString(), new Hex.Hex(0, 0, 0) );
-    this.state.hexMap.set([0, 1, -1].toString(), new Hex.Hex(0, 1, -1));
-    this.state.hexMap.set([0, -1, 1].toString(), new Hex.Hex(0, -1, 1));
-    this.state.hexMap.set([1, -1, 0].toString(), new Hex.Hex(1, -1, 0));
-    this.state.hexMap.set([-1, 1, 0].toString(), new Hex.Hex(-1, 1, 0));
-    this.state.hexMap.set([1, 0, -1].toString(), new Hex.Hex(1, 0, -1));
-    this.state.hexMap.set([-1, 0, 1].toString(), new Hex.Hex(-1, 0, 1));
-    */
   }
 
+
+  /// --==== Initiliazation ====--
+
+
   componentDidMount(){
-    this.oldStateMachine.start();
     this.stateMachine.start();
     const mapWidth = this.divElement.clientWidth;
     const mapHeight = this.divElement.clientHeight;
@@ -81,105 +84,170 @@ class App extends Component {
     }
 
     this.setState({
-      hexMap: this.state.hexMap,
-      offset: this.state.offset,
       mapWidth: mapWidth,
       mapHeight: mapHeight,
-      hexSize: this.state.hexSize,
-      button1Text: this.state.button1Text,
-      button2Text: this.state.button2Text,
-      button3Text: this.state.button3Text,
-      button1Callback: this.state.button1Callback,
-      button2Callback: this.state.button2Callback,
-      button3Callback: this.state.button3Callback
     });
   }
 
-  onState1(){
-    const button1Text = "State2";
-    const button2Text = "State3";
-    const button3Text = "State4";
 
-    this.setState({
-      button1Text: button1Text,
-      button2Text: button2Text,
-      button3Text: button3Text,
-      button1Callback: ()=>{this.oldStateMachine.state2tran()},
-      button2Callback: ()=>{this.oldStateMachine.state3tran()},
-      button3Callback: ()=>{this.oldStateMachine.state4tran()}
-    })
+  /// --==== State Maching ====--
+
+
+  // Called on any transition
+  onTranstition(){
+    this.forceUpdate();
   }
 
-  onState2(){
-    const button1Text = "State1";
-    const button2Text = "State3";
-    const button3Text = "State4";
-
-    this.setState({
-      button1Text: button1Text,
-      button2Text: button2Text,
-      button3Text: button3Text,
-      button1Callback: ()=>{this.oldStateMachine.state1tran()},
-      button2Callback: ()=>{this.oldStateMachine.state3tran()},
-      button3Callback: ()=>{this.oldStateMachine.state4tran()}
-    })
+  onReady(){
+    this.setButtonStates(
+      'Start Search', () => this.startSearch(), true,
+      'Pause Search', () => this.pauseSearch(), false,
+      'Clear Walls', () => this.clearWalls(), true);
   }
 
-  onState3(){
-    const button1Text = "State1";
-    const button2Text = "State2";
-    const button3Text = "State4";
-
-    this.setState({
-      button1Text: button1Text,
-      button2Text: button2Text,
-      button3Text: button3Text,
-      button1Callback: ()=>{this.oldStateMachine.state1tran()},
-      button2Callback: ()=>{this.oldStateMachine.state2tran()},
-      button3Callback: ()=>{this.oldStateMachine.state4tran()}
-    })
+  onVisualizing(){
+    this.setButtonStates(
+      'Restart Search', () => this.restartSearch(), true,
+      'Pause Search', () => this.pauseSearch(), true,
+      'Clear Walls', () => this.clearWalls(), true);
+    setTimeout(() => this.visualizeStep(), 100);
   }
 
-  onState4(){
-    const button1Text = "State1";
-    const button2Text = "State2";
-    const button3Text = "State3";
-
-    this.setState({
-      button1Text: button1Text,
-      button2Text: button2Text,
-      button3Text: button3Text,
-      button1Callback: ()=>{this.oldStateMachine.state1tran()},
-      button2Callback: ()=>{this.oldStateMachine.state2tran()},
-      button3Callback: ()=>{this.oldStateMachine.state3tran()}
-    })
-  }
-
-  handelClick(i){
-    switch(i){
-      case 1:
-        this.state.button1Callback();
-        break;
-      case 2:
-        this.state.button2Callback();
-        break;
-      case 3:
-        this.state.button3Callback();
-        break;
-      default:
-        console.log("ERROR");
-        break;
+  visualizeStep(){
+    if(this.stateMachine.is('visualizing')){
+      // if the list is not empty
+      if(this.state.searchResults.length() !== 0){
+        this.hexSetVisited(this.state.searchResults.dequeue());
+              // now that the list is empty
+        if(this.state.searchResults.length() === 0){
+          // visualize path
+          if(this.stateMachine.can('finish')){
+            this.stateMachine.finish();
+          }
+        }
+        setTimeout(() => this.visualizeStep(), 100);
+      }
     }
   }
+
+  onPaused(){
+    this.setButtonStates(
+      'Cancel Search', () => this.cancelSearch(), true,
+      'Resume Search', () => this.resumeSearch(), true,
+      'Clear Walls', () => this.clearWalls(), true);
+  }
+
+  onFinished(){
+    this.setButtonStates(
+      'Restart Search', () => this.restartSearch(), true,
+      'Clear Path', () => this.cancelSearch(), true,
+      'Clear Walls', () => this.clearWalls(), true);
+  }
+
+  
+  onStart(){
+    console.log('pathfinding');
+    this.state.searchResults.clear();
+    for( let r = 0; r < 10; r++){
+      this.state.searchResults.enqueue([0, r, -r]);
+    }
+  }
+
+  onRestart(){
+    console.log('restarting');
+    for(let hex of this.state.hexMap.values()){
+      hex.visited = false;
+    }
+    this.state.searchResults.clear();
+    for( let r = 0; r < 10; r++){
+      this.state.searchResults.enqueue([0, r, -r]);
+    }
+  }
+
+  onClear(){
+    console.log('clearing');
+    for(let hex of this.state.hexMap.values()){
+      hex.state = 0;
+      hex.visited = false;
+    }
+  }
+
+  onCancel(){
+    console.log('canceled');
+    for(let hex of this.state.hexMap.values()){
+      hex.visited = false;
+    }
+  }
+
+
+  /// --==== Button Methods ====--
+
+  setButtonStates(
+    button1Text, button1Callback, button1Enabled, 
+    button2Text, button2Callback, button2Enabled, 
+    button3Text, button3Callback, button3Enabled
+    ){
+    this.setState({
+      button1Text: button1Text,
+      button2Text: button2Text,
+      button3Text: button3Text,
+      button1Enabled: button1Enabled,
+      button2Enabled: button2Enabled,
+      button3Enabled: button3Enabled,
+      button1Callback: button1Callback,
+      button2Callback: button2Callback,
+      button3Callback: button3Callback
+    });
+  }
+
+  startSearch(){
+    if(this.stateMachine.can('start')){
+      this.stateMachine.start();
+    }
+  }
+
+  pauseSearch(){
+    if(this.stateMachine.can('pause')){
+      this.stateMachine.pause();
+    }
+  }
+
+  resumeSearch(){
+    if(this.stateMachine.can('resume')){
+      this.stateMachine.resume();
+    }
+  }
+
+  restartSearch(){
+    if(this.stateMachine.can('restart')){
+      this.stateMachine.restart();
+    }
+  }
+
+  cancelSearch(){
+    if(this.stateMachine.can('cancel')){
+      this.stateMachine.cancel();
+    }
+  }
+
+  clearWalls(){
+    if(this.stateMachine.can('clear')){
+      this.stateMachine.clear();
+    }
+  }
+
+
+  /// --==== Hex Field Interaction ====--
+
 
   hexFieldMouseMove(event){
     var x = event.pageX - this.state.offset[0];
     var y = event.pageY - this.state.offset[1];
     if(this.stateMachine.is('drawingWalls')){
-      this.hexDraw(Hex.worldToHex(x, y, this.state.hexSize), 1);
+      this.hexSet(Hex.worldToHex(x, y, this.state.hexSize), 1);
     }
     else if(this.stateMachine.is('erasingWalls')){
-      this.hexDraw(Hex.worldToHex(x, y, this.state.hexSize), 0);
+      this.hexSet(Hex.worldToHex(x, y, this.state.hexSize), 0);
     }
     /*
     for(let hex of this.state.hexMap.values()){
@@ -218,10 +286,18 @@ class App extends Component {
     }
   }
 
-  hexDraw(coords, state){
+  hexSet(coords, state){
     const hex = this.state.hexMap.get(coords.toString());
     if(hex){
       hex.state = state;
+    }
+    this.forceUpdate();
+  }
+
+  hexSetVisited(coords, visited = true){
+    const hex = this.state.hexMap.get(coords.toString());
+    if(hex){
+      hex.visited = visited;
     }
     this.forceUpdate();
   }
@@ -246,19 +322,22 @@ class App extends Component {
           <Panel header={this.stateMachine.state}>
             <button 
               class="panel-button"
-              onClick={() => this.handelClick(1)}
+              onClick={() => this.state.button1Callback()}
+              disabled={!this.state.button1Enabled}
             >
               {this.state.button1Text}
             </button>
             <button 
               class="panel-button"
-              onClick={() => this.handelClick(2)}
+              onClick={() => this.state.button2Callback()}
+              disabled={!this.state.button2Enabled}
             >
               {this.state.button2Text}
             </button>
             <button 
               class="panel-button"
-              onClick={() => this.handelClick(3)}
+              onClick={() => this.state.button3Callback()}
+              disabled={!this.state.button3Enabled}
             >
               {this.state.button3Text}
             </button>
