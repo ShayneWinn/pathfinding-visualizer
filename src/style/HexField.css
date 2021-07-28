@@ -22,3 +22,7 @@
     animation-play-state: running;
     */
 }
+
+.hex-visited{
+    fill:#98FB98;
+}

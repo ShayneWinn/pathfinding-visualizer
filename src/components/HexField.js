@@ -32,6 +32,9 @@ class HexField extends Component {
 
             let classes = "hex"
             classes += (hex.state === 0 ? " hex-air": " hex-wall")
+            if(hex.visited){
+                classes = "hex hex-visited";
+            }
 
             svgHexes.push(
                     <polygon

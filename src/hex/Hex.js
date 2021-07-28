@@ -7,6 +7,7 @@ export class Hex {
     r = NaN;
     s = NaN;
     state = null;
+    visited = false;
 
     constructor(_q, _r, _s) {
         console.assert(_q + _r + _s === 0);
