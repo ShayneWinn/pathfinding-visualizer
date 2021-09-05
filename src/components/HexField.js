@@ -4,7 +4,6 @@ import '../style/HexField.css'
 class HexField extends Component {
     constructor(props){
         super(props)
-        this.props = props;
 
         this.handleMouseMove = (e) => this.props.onMouseMove(e);
         this.handleMouseDown = (e) => this.props.onMouseDown(e);
@@ -34,6 +33,12 @@ class HexField extends Component {
             classes += (hex.state === 0 ? " hex-air": " hex-wall")
             if(hex.visited){
                 classes = "hex hex-visited";
+            }
+            if(key === this.props.startNode.toString()){
+                classes = "hex hex-start";
+            }
+            if(key === this.props.endNode.toString()){
+                classes = "hex hex-end";
             }
 
             svgHexes.push(

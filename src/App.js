@@ -17,6 +17,8 @@ class App extends Component {
       mapHeight: 0,
       hexSize: 20,
       searchResults: new Queue(),
+      startNode: null,
+      endNode: null,
       button1Text: null,
       button2Text: null,
       button3Text: null,
@@ -37,7 +39,9 @@ class App extends Component {
         // drawing
         {name: 'drawWall',    from: 'ready',  to: 'drawingWalls'},                  // drawing new walls
         {name: 'eraseWall',   from: 'ready',  to: 'erasingWalls'},                  // erasing walls
-        {name: 'finishDraw',  from:['drawingWalls', 'erasingWalls'], to: 'ready'},  // done drawing, ready to visualize
+        {name: 'dragStart',   from: 'ready',  to: 'draggingStart'},                 // moving the start node
+        {name: 'dragEnd',     from: 'ready',  to: 'draggingEnd'},                   // moving the end node
+        {name: 'finishDraw',  from:['drawingWalls', 'erasingWalls', 'draggingStart', 'draggingEnd'], to: 'ready'},  // done drawing, ready to visualize
 
         // pathfinding
         {name: 'start',       from: 'ready',                                to: 'visualizing'},     // the algorithm is running
@@ -73,8 +77,8 @@ class App extends Component {
     const mapWidth = this.divElement.clientWidth;
     const mapHeight = this.divElement.clientHeight;
 
-    const hexWidth = Math.ceil(mapWidth / (Math.sqrt(3) * this.state.hexSize)) + 1;
-    const hexHeight = Math.ceil(mapHeight / (0.75 * 2 * this.state.hexSize)) + 1;
+    const hexWidth = Math.ceil(mapWidth / (Math.sqrt(3) * this.state.hexSize));
+    const hexHeight = Math.ceil(mapHeight / (0.75 * 2 * this.state.hexSize));
     console.log(hexHeight);
     for(let r = 0; r < hexHeight; r++){
       let r_off = Math.floor(r/2);
@@ -83,9 +87,13 @@ class App extends Component {
       }
     }
 
+    let halfHeight = Math.floor(hexHeight / 2);
+
     this.setState({
-      mapWidth: mapWidth,
-      mapHeight: mapHeight,
+      mapWidth:   mapWidth,
+      mapHeight:  mapHeight,
+      startNode:  [0, halfHeight, -halfHeight],
+      endNode:    [hexWidth - halfHeight, halfHeight, -hexWidth]
     });
   }
 
@@ -148,6 +156,7 @@ class App extends Component {
   onStart(){
     console.log('pathfinding');
     this.state.searchResults.clear();
+    //TODO: Pathfind stuffs
     for( let r = 0; r < 10; r++){
       this.state.searchResults.enqueue([0, r, -r]);
     }
@@ -158,10 +167,7 @@ class App extends Component {
     for(let hex of this.state.hexMap.values()){
       hex.visited = false;
     }
-    this.state.searchResults.clear();
-    for( let r = 0; r < 10; r++){
-      this.state.searchResults.enqueue([0, r, -r]);
-    }
+    this.onStart();
   }
 
   onClear(){
@@ -181,6 +187,7 @@ class App extends Component {
 
 
   /// --==== Button Methods ====--
+
 
   setButtonStates(
     button1Text, button1Callback, button1Enabled, 
@@ -243,29 +250,32 @@ class App extends Component {
   hexFieldMouseMove(event){
     var x = event.pageX - this.state.offset[0];
     var y = event.pageY - this.state.offset[1];
-    if(this.stateMachine.is('drawingWalls')){
-      this.hexSet(Hex.worldToHex(x, y, this.state.hexSize), 1);
+    var hexCoords = Hex.worldToHex(x, y, this.state.hexSize);
+    if(this.stateMachine.is('draggingStart')){
+      this.setState({ startNode: hexCoords, })
+    }
+    else if(this.stateMachine.is('draggingEnd')){
+      this.setState({ endNode: hexCoords, })
+    }
+    else if(this.stateMachine.is('drawingWalls')){
+      this.hexSet(hexCoords, 1);
     }
     else if(this.stateMachine.is('erasingWalls')){
-      this.hexSet(Hex.worldToHex(x, y, this.state.hexSize), 0);
+      this.hexSet(hexCoords, 0);
     }
-    /*
-    for(let hex of this.state.hexMap.values()){
-      hex.state = 0;
-    }
-    if(hex){
-      hex.state = 1;
-    }
-    this.forceUpdate();
-    */
-    
   }
 
   hexFieldMouseDown(event){
     const x = event.pageX; const y = event.pageY;
     const hex = this.state.hexMap.get(Hex.worldToHex(x, y, this.state.hexSize).toString());
     if(hex){
-      if(this.stateMachine.can('drawWall') && hex.state === 0){
+      if(this.stateMachine.can('dragStart') && hex.equals(this.state.startNode)){
+        this.stateMachine.dragStart();
+      }
+      else if(this.stateMachine.can('dragEnd') && hex.equals(this.state.endNode)){
+        this.stateMachine.dragEnd();
+      }
+      else if(this.stateMachine.can('drawWall') && hex.state === 0){
         this.stateMachine.drawWall();
 
         hex.state=1;
@@ -301,7 +311,7 @@ class App extends Component {
     }
     this.forceUpdate();
   }
-
+//        <SidePanel class="nav"/>
   render() {
     return (
       <div 
@@ -309,39 +319,40 @@ class App extends Component {
         style={{top: "0px", bottom:"0px", width:"100%", position:'absolute'}}
         ref={(divElement) => this.divElement = divElement}
       >
-        <div class="header" />
-          <HexField 
-            width={this.state.mapWidth} height ={this.state.mapHeight}
-            size={this.state.hexSize}
-            hexes={this.state.hexMap}
-            viewOffset={this.state.offset}
-            onMouseDown={(e) => this.hexFieldMouseDown(e)}
-            onMouseMove={(e) => this.hexFieldMouseMove(e)}
-            onMouseUp=  {(e) => this.hexFieldMouseUp(e)}
-          />
-          <Panel header={this.stateMachine.state}>
-            <button 
-              class="panel-button"
-              onClick={() => this.state.button1Callback()}
-              disabled={!this.state.button1Enabled}
-            >
-              {this.state.button1Text}
-            </button>
-            <button 
-              class="panel-button"
-              onClick={() => this.state.button2Callback()}
-              disabled={!this.state.button2Enabled}
-            >
-              {this.state.button2Text}
-            </button>
-            <button 
-              class="panel-button"
-              onClick={() => this.state.button3Callback()}
-              disabled={!this.state.button3Enabled}
-            >
-              {this.state.button3Text}
-            </button>
-          </Panel>
+        <HexField 
+          width={this.state.mapWidth} height ={this.state.mapHeight}
+          size={this.state.hexSize}
+          hexes={this.state.hexMap}
+          viewOffset={this.state.offset}
+          startNode={this.state.startNode}
+          endNode={this.state.endNode}
+          onMouseDown={(e) => this.hexFieldMouseDown(e)}
+          onMouseMove={(e) => this.hexFieldMouseMove(e)}
+          onMouseUp=  {(e) => this.hexFieldMouseUp(e)}
+        />
+        <Panel header={this.stateMachine.state}>
+          <button 
+            class="panel-button"
+            onClick={() => this.state.button1Callback()}
+            disabled={!this.state.button1Enabled}
+          >
+            {this.state.button1Text}
+          </button>
+          <button 
+            class="panel-button"
+            onClick={() => this.state.button2Callback()}
+            disabled={!this.state.button2Enabled}
+          >
+            {this.state.button2Text}
+          </button>
+          <button 
+            class="panel-button"
+            onClick={() => this.state.button3Callback()}
+            disabled={!this.state.button3Enabled}
+          >
+            {this.state.button3Text}
+          </button>
+        </Panel>
       </div>
     );
   }

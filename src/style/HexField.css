@@ -11,15 +11,25 @@
 .hex-wall{
     /* fill: rgb(9, 40, 53); */
     fill: #596275;
+    /*
     animation-name: wall-pop;
     animation-duration: 0.05s;
     animation-direction: normal;
     animation-fill-mode: forwards;
     animation-play-state: running;
+    */
 }
 
 .hex-visited{
     fill:#98FB98;
+}
+
+.hex-start{
+    fill: green;
+}
+
+.hex-end{
+    fill: red;
 }
 
 @keyframes wall-pop{

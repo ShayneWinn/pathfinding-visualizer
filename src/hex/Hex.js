@@ -18,7 +18,16 @@ export class Hex {
     }
 
     equals(other){
-        return (this.q === other.q && this.r === other.r && this.s === other.s);
+        if(other.q){
+            return (this.q === other.q && this.r === other.r && this.s === other.s);
+        }
+        else {
+            return (this.q === other[0] && this.r === other[1] && this.s === other[2]);
+        }
+    }
+
+    getCoords(){
+        return [this.q, this.r, this.s];
     }
 }
 
