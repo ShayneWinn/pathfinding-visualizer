@@ -1,0 +1,30 @@
+.nav {
+    width:250px;
+    height:100%;
+    bottom:0px;
+    position:absolute;
+    background-color: #76829B;
+}
+
+.nav-play-container{
+  padding-inline: 10%;
+}
+
+.nav-play-container:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.nav-play-container button{
+  border: none;
+  background: none;
+  width: 33.33%;
+  aspect-ratio: 1 / 1;
+  padding: 5%;
+}
+
+.nav-play-container button img{
+  width:100%;
+  height:100%;
+}

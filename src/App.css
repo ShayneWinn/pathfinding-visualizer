@@ -10,6 +10,19 @@
 }
 
 .header {
-  height: 0vh;
-  background-color: black;
+  position: absolute;
+  z-index: 10;
+  min-height: 100px;
+  max-height: 100px;
+  width: 100%;
+  background-color: grey;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+
+li {
+  display: inline;
+  float: left;
 }

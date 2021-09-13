@@ -2,6 +2,9 @@ import { Component } from 'react';
 import Queue from './Queue'
 import Panel from './components/Panel'
 import HexField from './components/HexField'
+import SidePanel from './components/SidePanel'
+import Sidebar from './test/Sidebar'
+import Content from './test/Content'
 import * as Hex from './hex/Hex'
 import './App.css';
 var StateMachine = require('javascript-state-machine')
@@ -71,14 +74,11 @@ class App extends Component {
 
   /// --==== Initiliazation ====--
 
-
-  componentDidMount(){
+  hexFieldDidMount(e){
     this.stateMachine.start();
-    const mapWidth = this.divElement.clientWidth;
-    const mapHeight = this.divElement.clientHeight;
 
-    const hexWidth = Math.ceil(mapWidth / (Math.sqrt(3) * this.state.hexSize));
-    const hexHeight = Math.ceil(mapHeight / (0.75 * 2 * this.state.hexSize));
+    const hexWidth = Math.ceil(e.width / (Math.sqrt(3) * this.state.hexSize));
+    const hexHeight = Math.ceil(e.height / (0.75 * 2 * this.state.hexSize));
     console.log(hexHeight);
     for(let r = 0; r < hexHeight; r++){
       let r_off = Math.floor(r/2);
@@ -90,13 +90,22 @@ class App extends Component {
     let halfHeight = Math.floor(hexHeight / 2);
 
     this.setState({
-      mapWidth:   mapWidth,
-      mapHeight:  mapHeight,
+      mapWidth:   e.width,
+      mapHeight:  e.height,
+      mapPosX:    e.posX,
+      mapPosY:    e.posY,
       startNode:  [0, halfHeight, -halfHeight],
       endNode:    [hexWidth - halfHeight, halfHeight, -hexWidth]
     });
-  }
 
+    return({
+      width: e.width,
+      height: e.height,
+      posX: e.posX,
+      posY: e.posY,
+      size: this.state.hexSize,
+    });
+  }
 
   /// --==== State Maching ====--
 
@@ -248,8 +257,8 @@ class App extends Component {
 
 
   hexFieldMouseMove(event){
-    var x = event.pageX - this.state.offset[0];
-    var y = event.pageY - this.state.offset[1];
+    const x = event.pageX - this.state.mapPosX; 
+    const y = event.pageY - this.state.mapPosY;
     var hexCoords = Hex.worldToHex(x, y, this.state.hexSize);
     if(this.stateMachine.is('draggingStart')){
       this.setState({ startNode: hexCoords, })
@@ -266,26 +275,32 @@ class App extends Component {
   }
 
   hexFieldMouseDown(event){
-    const x = event.pageX; const y = event.pageY;
+    console.log(event);
+    const x = event.pageX - this.state.mapPosX; 
+    const y = event.pageY - this.state.mapPosY;
     const hex = this.state.hexMap.get(Hex.worldToHex(x, y, this.state.hexSize).toString());
+    console.log([x, y]);
+    console.log(hex);
     if(hex){
-      if(this.stateMachine.can('dragStart') && hex.equals(this.state.startNode)){
-        this.stateMachine.dragStart();
-      }
-      else if(this.stateMachine.can('dragEnd') && hex.equals(this.state.endNode)){
-        this.stateMachine.dragEnd();
-      }
-      else if(this.stateMachine.can('drawWall') && hex.state === 0){
-        this.stateMachine.drawWall();
+      if(hex){
+        if(this.stateMachine.can('dragStart') && hex.equals(this.state.startNode)){
+          this.stateMachine.dragStart();
+        }
+        else if(this.stateMachine.can('dragEnd') && hex.equals(this.state.endNode)){
+          this.stateMachine.dragEnd();
+        }
+        else if(this.stateMachine.can('drawWall') && hex.state === 0){
+          this.stateMachine.drawWall();
 
-        hex.state=1;
-        this.forceUpdate();
-      }
-      else if(this.stateMachine.can('eraseWall') && hex.state !== 0){
-        this.stateMachine.eraseWall();
+          hex.state=1;
+          this.forceUpdate();
+        }
+        else if(this.stateMachine.can('eraseWall') && hex.state !== 0){
+          this.stateMachine.eraseWall();
 
-        hex.state=0;
-        this.forceUpdate();
+          hex.state=0;
+          this.forceUpdate();
+        }
       }
     }
   }
@@ -311,7 +326,7 @@ class App extends Component {
     }
     this.forceUpdate();
   }
-//        <SidePanel class="nav"/>
+
   render() {
     return (
       <div 
@@ -319,18 +334,27 @@ class App extends Component {
         style={{top: "0px", bottom:"0px", width:"100%", position:'absolute'}}
         ref={(divElement) => this.divElement = divElement}
       >
-        <HexField 
-          width={this.state.mapWidth} height ={this.state.mapHeight}
-          size={this.state.hexSize}
+        <SidePanel
+          state={this.stateMachine.state}
+        >
+        </SidePanel>
+        <HexField
           hexes={this.state.hexMap}
-          viewOffset={this.state.offset}
           startNode={this.state.startNode}
           endNode={this.state.endNode}
           onMouseDown={(e) => this.hexFieldMouseDown(e)}
           onMouseMove={(e) => this.hexFieldMouseMove(e)}
-          onMouseUp=  {(e) => this.hexFieldMouseUp(e)}
+          onMouseUp={(e) => this.hexFieldMouseUp(e)}
+          onMount={(e) => this.hexFieldDidMount(e)}
         />
-        <Panel header={this.stateMachine.state}>
+      </div>
+    );
+    /*
+    return(
+      <div>
+        <Sidebar />
+        <Content />
+                <Panel header={this.stateMachine.state}>
           <button 
             class="panel-button"
             onClick={() => this.state.button1Callback()}
@@ -353,8 +377,9 @@ class App extends Component {
             {this.state.button3Text}
           </button>
         </Panel>
-      </div>
+      </ div>
     );
+    */
   }
 }
 

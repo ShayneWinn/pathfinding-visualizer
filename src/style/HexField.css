@@ -1,3 +1,11 @@
+.hex-field{
+    left:250px;
+    bottom:0px;
+    right:0px;
+    top:0px;
+    position:absolute;
+    overflow:hidden;
+}
 
 .hex{
     stroke: #000;

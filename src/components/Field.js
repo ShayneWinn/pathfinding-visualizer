@@ -24,8 +24,8 @@ class Field extends Component {
     /// Called after the component is inserted into the tree
     componentDidMount() {
         const cellSize = this.cellSize;
-        const height = this.divElement.clientHeight;
-        const width = this.divElement.clientWidth;
+        const height = this.container.offsetWidth;
+        const width = this.container.offsetWidth;
         const nCellsHigh = Math.ceil(height / cellSize);
         const nCellsWide = Math.ceil(width / cellSize);
         const cells = this.state.cells.slice();
