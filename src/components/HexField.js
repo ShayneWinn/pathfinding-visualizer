@@ -58,6 +58,7 @@ class HexField extends Component {
 
             svgHexes.push(
                     <polygon
+                        id={hex.getCoords().toString()}
                         style={{transformOrigin:`${x}px ${y}px`}}
                         points={points}
                         class={classes}

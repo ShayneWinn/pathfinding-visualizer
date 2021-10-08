@@ -257,6 +257,9 @@ class App extends Component {
 
 
   hexFieldMouseMove(event){
+    event.target.classList.add("hex-wall");
+    //this.hexSet(event.target.id, 1);
+    /*
     const x = event.pageX - this.state.mapPosX; 
     const y = event.pageY - this.state.mapPosY;
     var hexCoords = Hex.worldToHex(x, y, this.state.hexSize);
@@ -272,10 +275,12 @@ class App extends Component {
     else if(this.stateMachine.is('erasingWalls')){
       this.hexSet(hexCoords, 0);
     }
+    */
   }
 
   hexFieldMouseDown(event){
     console.log(event);
+    /*
     const x = event.pageX - this.state.mapPosX; 
     const y = event.pageY - this.state.mapPosY;
     const hex = this.state.hexMap.get(Hex.worldToHex(x, y, this.state.hexSize).toString());
@@ -303,6 +308,7 @@ class App extends Component {
         }
       }
     }
+    */
   }
 
   hexFieldMouseUp(){
